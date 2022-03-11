@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Socket.IO game</title>
+    <link rel="stylesheet" href="./index.css">
+</head>
+
+<body>
+    <div class="point" id="myPoint"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const randomNum = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min
+        const randomColor = () => Math.floor(Math.random() * 16777215).toString(16)
+
+        const addBall = id => {
+            console.log("new ball", id)
+            const ball = document.createElement('div')
+            ball.classList.add("point")
+            ball.id = id
+            ball.style.backgroundColor = `#${randomColor()}`
+            document.body.appendChild(ball)
+        }
+
+        const height = window.innerHeight
+        const width = window.innerWidth
+
+        const main = async () => {
+            const socket = await io()
+
+            const myPoint = document.getElementById('myPoint')
+
+            myPoint.addEventListener('click', () => {
+                console.log("Click!")
+                const maxH = height - myPoint.offsetHeight
+                const maxW = width - myPoint.offsetWidth
+
+                const newH = randomNum(0, maxH)
+                const newW = randomNum(0, maxW)
+
+                myPoint.style.top = `${newH}px`
+                myPoint.style.left = `${newW}px`
+
+                socket.emit('pos', { top: newH / maxH, left: newW / maxW, id: socket.id })
+            })
+
+            socket.on('join', msg => {
+                if (msg.id !== socket.id)
+                    addBall(msg.id)
+
+            })
+
+            socket.on('pos', msg => {
+                if (msg.id !== socket.id) {
+                    console.log("ball change pos", msg)
+
+                    const ball = document.getElementById(msg.id)
+
+                    const maxH = height - myPoint.offsetHeight
+                    const maxW = width - myPoint.offsetWidth
+
+                    ball.style.top = `${Math.floor(maxH * msg.top)}px`
+                    ball.style.left = `${Math.floor(maxH * msg.left)}px`
+                }
+            })
+
+            socket.on('players', msg => {
+                if (msg.for !== socket.id) {
+                    // Удаляем игрока
+                    document.getElementById(msg.id).remove()
+                } else {
+                    // Добавляем игроков
+                    for (const ball of msg.players) {
+                        if (ball !== socket.id)
+                            addBall(ball)
+                    }
+                    
+                }
+            })
+
+        }
+
+        main()
+        /*const messages = document.getElementById('messages')
+        const form = document.getElementById('form')
+        const input = document.getElementById('input')
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault()
+            if (input.value) {
+                socket.emit('chat message', input.value)
+                input.value = ''
+            }
+        })
+
+        socket.on('chat message', function (msg) {
+            const item = document.createElement('li')
+            item.textContent = msg
+            messages.appendChild(item)
+            window.scrollTo(0, document.body.scrollHeight)
+        })*/
+    </script>
+</body>
+
+</html>

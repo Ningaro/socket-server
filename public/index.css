@@ -1,0 +1,22 @@
+html, body {
+    height: 100%;
+}
+
+body {
+    margin: 0px;
+}
+
+.point {
+    width: 2em;
+    height: 2em;
+    border-radius: 1em;
+    transition: top 1s, left 1s;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+}
+
+#myPoint {
+    background: red;
+    z-index: 100;
+}
